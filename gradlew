@@ -40,11 +40,11 @@ do
     esac
 done
 
-# This is normally unused
-# shellcheck disable=SC2034
 APP_BASE_NAME=${0##*/}
-# Discard cd standard output in case $CDPATH is set (https://github.com/gradle/gradle/issues/25036)
 APP_HOME=$( cd "${APP_HOME:-./}" > /dev/null && pwd -P ) || exit
+
+# Add default JVM options here.
+DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD=maximum
@@ -78,7 +78,6 @@ CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 # Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
-        # IBM's JDK on AIX uses strange locations for the executables
         JAVACMD=$JAVA_HOME/jre/sh/java
     else
         JAVACMD=$JAVA_HOME/bin/java
@@ -104,16 +103,12 @@ fi
 if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
     case $MAX_FD in #(
       max*)
-        # In POSIX sh, ulimit -H is undefined. That's why the result is checked to see if it worked.
-        # shellcheck disable=SC2039,SC3045
         MAX_FD=$( ulimit -H -n ) ||
             warn "Could not query maximum file descriptor limit"
     esac
     case $MAX_FD in  #(
       '' | soft) :;; #(
       *)
-        # In POSIX sh, ulimit -n is undefined. That's why the result is checked to see if it worked.
-        # shellcheck disable=SC2039,SC3045
         ulimit -n "$MAX_FD" ||
             warn "Could not set maximum file descriptor limit to $MAX_FD"
     esac
@@ -124,72 +119,21 @@ fi
 #   * the main class name
 #   * -classpath
 #   * -D...appname settings
-#   * --module-path (only if needed)
 #   * DEFAULT_JVM_OPTS, JAVA_OPTS, and GRADLE_OPTS environment variables.
 
 # For Cygwin or MSYS, switch paths to Windows format before running java
 if "$cygwin" || "$msys" ; then
     APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
     CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
-
     JAVACMD=$( cygpath --unix "$JAVACMD" )
-
-    # Now convert the arguments - kludge to limit ourselves to /bin/sh
-    for arg do
-        if
-            case $arg in                                #(
-              -*)   false ;;                            # don't mess with options #(
-              /?*)  t=${arg#)}; t=/${t%%/*}             # looks like a POSIX filepath
-                    [ -e "$t" ] ;;                      #(
-              *)    false ;;
-            esac
-        then
-            arg=$( cygpath --path --ignore --mixed "$arg" )
-        fi
-        # Roll the args list around exactly as many times as the number of
-        # temporary variables assigned, so each argument winds up back in the
-        # temporary variable previously (and alarm clock style) assigned to it.
-        shift                   # remove old arg
-        set -- "$@" "$arg"      # push replacement arg
-    done
 fi
 
-
-# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
-
-# Collect all arguments for the java command;
-#   * $DEFAULT_JVM_OPTS, $JAVA_OPTS, and $GRADLE_OPTS can contain fragments of
-#     temporary variable assignments, which must be kept in the correct order.
-#   * The user-supplied arguments are at the end.
+# Collect all arguments for the java command
 set -- \
         "-Dorg.gradle.appname=$APP_BASE_NAME" \
         -classpath "$CLASSPATH" \
         org.gradle.wrapper.GradleWrapperMain \
         "$@"
 
-# Stop when "xeli" or DEBUG is set, but not if "xeli" is "false".
-if [ "${DEBUG:-}" != "false" ] && { [ "${xeli:-}" != "false" ] || [ "${DEBUG:-}" != "" ]; }; then
-    set -- -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 "$@"
-fi
-
-# Use "xargs" to parse quoted args.
-#
-# With -n://--no-run-if-empty we don't need to check for an empty "$@".
-#
-# With -n://--exit we check the exit status of "xargs".
-#
-# The results are available as $?, and we use that to determine whether
-# or not to execute "exec" at the end.
-#
-# Begin: Workaround for https://github.com/gradle/gradle/issues/24107
-# End: Workaround
-
-eval "set -- $(
-        printf '%s\n' "$DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS" |
-        xargs -n1 |
-        sed ' s~[^-[:alnum:]+,./:=@_]~\\&~g; ' |
-        tr '\n' ' '
-    )" '"$@"'
-
-exec "$JAVACMD" "$@"
+# Execute gradle
+exec "$JAVACMD" $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS "$@"
