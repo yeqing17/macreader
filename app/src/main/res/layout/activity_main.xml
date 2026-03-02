@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#1a1a2e"
+    android:background="#f5f5f5"
     android:padding="24dp">
 
     <!-- 标题栏 -->
@@ -21,7 +21,7 @@
             android:text="MAC地址读取器"
             android:textSize="28sp"
             android:textStyle="bold"
-            android:textColor="#00d9ff"/>
+            android:textColor="#1976D2"/>
 
         <TextView
             android:id="@+id/tvVersion"
@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:text="v1.2"
             android:textSize="16sp"
-            android:textColor="#666666"
+            android:textColor="#888888"
             android:layout_marginEnd="24dp"/>
 
         <Button
@@ -51,22 +51,21 @@
     </LinearLayout>
 
     <!-- 设备信息卡片 -->
-    <LinearLayout
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="#16213e"
-        android:padding="16dp"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="16dp"
+        android:elevation="4dp">
 
         <TextView
             android:id="@+id/tvDeviceInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:padding="16dp"
             android:textSize="18sp"
-            android:textColor="#e0e0e0"
+            android:textColor="#333333"
             android:fontFamily="monospace"/>
-    </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
     <!-- 主内容区域 - 横向两列 -->
     <LinearLayout
@@ -85,129 +84,144 @@
             android:layout_marginEnd="8dp">
 
             <!-- 方法1 -->
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#16213e"
-                android:padding="12dp"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="8dp"
+                android:elevation="2dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="方法1: NetworkInterface"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#00d9ff"
-                    android:paddingBottom="8dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="NetworkInterface.getNetworkInterfaces()"
-                    android:textSize="12sp"
-                    android:textColor="#888888"
-                    android:fontFamily="monospace"
-                    android:paddingBottom="4dp"/>
-
-                <ScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
                     <TextView
-                        android:id="@+id/tvMethod1"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        android:textColor="#e0e0e0"
-                        android:fontFamily="monospace"/>
-                </ScrollView>
-            </LinearLayout>
+                        android:text="方法1: NetworkInterface"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1976D2"
+                        android:paddingBottom="4dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="NetworkInterface.getNetworkInterfaces()"
+                        android:textSize="11sp"
+                        android:textColor="#888888"
+                        android:fontFamily="monospace"
+                        android:paddingBottom="8dp"/>
+
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:id="@+id/tvMethod1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="#333333"
+                            android:fontFamily="monospace"/>
+                    </ScrollView>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <!-- 方法2 -->
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#16213e"
-                android:padding="12dp"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="8dp"
+                android:elevation="2dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="方法2: /sys/class/net"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#00d9ff"
-                    android:paddingBottom="8dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="File(&quot;/sys/class/net/*/address&quot;).readText()"
-                    android:textSize="12sp"
-                    android:textColor="#888888"
-                    android:fontFamily="monospace"
-                    android:paddingBottom="4dp"/>
-
-                <ScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
                     <TextView
-                        android:id="@+id/tvMethod2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        android:textColor="#e0e0e0"
-                        android:fontFamily="monospace"/>
-                </ScrollView>
-            </LinearLayout>
+                        android:text="方法2: /sys/class/net"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1976D2"
+                        android:paddingBottom="4dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="File(&quot;/sys/class/net/*/address&quot;).readText()"
+                        android:textSize="11sp"
+                        android:textColor="#888888"
+                        android:fontFamily="monospace"
+                        android:paddingBottom="8dp"/>
+
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:id="@+id/tvMethod2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="#333333"
+                            android:fontFamily="monospace"/>
+                    </ScrollView>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <!-- 方法3 -->
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#16213e"
-                android:padding="12dp">
+                android:elevation="2dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="方法3: ConnectivityManager"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#00d9ff"
-                    android:paddingBottom="8dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="ConnectivityManager.getAllNetworks()"
-                    android:textSize="12sp"
-                    android:textColor="#888888"
-                    android:fontFamily="monospace"
-                    android:paddingBottom="4dp"/>
-
-                <ScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
                     <TextView
-                        android:id="@+id/tvMethod3"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        android:textColor="#e0e0e0"
-                        android:fontFamily="monospace"/>
-                </ScrollView>
-            </LinearLayout>
+                        android:text="方法3: ConnectivityManager"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1976D2"
+                        android:paddingBottom="4dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="ConnectivityManager.getAllNetworks()"
+                        android:textSize="11sp"
+                        android:textColor="#888888"
+                        android:fontFamily="monospace"
+                        android:paddingBottom="8dp"/>
+
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:id="@+id/tvMethod3"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="#333333"
+                            android:fontFamily="monospace"/>
+                    </ScrollView>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
         </LinearLayout>
 
         <!-- 右列 -->
@@ -219,115 +233,97 @@
             android:layout_marginStart="8dp">
 
             <!-- 方法4 -->
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#16213e"
-                android:padding="12dp"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="8dp"
+                android:elevation="2dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="方法4: WifiManager"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#00d9ff"
-                    android:paddingBottom="8dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="WifiManager.getConnectionInfo().getMacAddress()"
-                    android:textSize="12sp"
-                    android:textColor="#888888"
-                    android:fontFamily="monospace"
-                    android:paddingBottom="4dp"/>
-
-                <ScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
                     <TextView
-                        android:id="@+id/tvMethod4"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        android:textColor="#e0e0e0"
-                        android:fontFamily="monospace"/>
-                </ScrollView>
-            </LinearLayout>
+                        android:text="方法4: WifiManager"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1976D2"
+                        android:paddingBottom="4dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="WifiManager.getConnectionInfo().getMacAddress()"
+                        android:textSize="11sp"
+                        android:textColor="#888888"
+                        android:fontFamily="monospace"
+                        android:paddingBottom="8dp"/>
+
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:id="@+id/tvMethod4"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="#333333"
+                            android:fontFamily="monospace"/>
+                    </ScrollView>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <!-- 方法5 -->
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#16213e"
-                android:padding="12dp"
-                android:layout_marginBottom="8dp">
+                android:elevation="2dp">
 
-                <TextView
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="方法5: Shell命令"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#00d9ff"
-                    android:paddingBottom="8dp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="ip link / ifconfig / cat /sys/class/net/*/address"
-                    android:textSize="12sp"
-                    android:textColor="#888888"
-                    android:fontFamily="monospace"
-                    android:paddingBottom="4dp"/>
-
-                <ScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
                     <TextView
-                        android:id="@+id/tvMethod5"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        android:textColor="#e0e0e0"
-                        android:fontFamily="monospace"/>
-                </ScrollView>
-            </LinearLayout>
+                        android:text="方法5: Shell命令"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1976D2"
+                        android:paddingBottom="4dp"/>
 
-            <!-- 总结 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:background="#0f3460"
-                android:padding="12dp">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="ip link / ifconfig / cat /sys/class/net/*/address"
+                        android:textSize="11sp"
+                        android:textColor="#888888"
+                        android:fontFamily="monospace"
+                        android:paddingBottom="8dp"/>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Android版本限制"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#ffc107"
-                    android:paddingBottom="8dp"/>
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
 
-                <TextView
-                    android:id="@+id/tvSummary"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp"
-                    android:textColor="#e0e0e0"
-                    android:fontFamily="monospace"/>
-            </LinearLayout>
+                        <TextView
+                            android:id="@+id/tvMethod5"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="#333333"
+                            android:fontFamily="monospace"/>
+                    </ScrollView>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

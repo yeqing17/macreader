@@ -29,7 +29,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvMethod3: TextView
     private lateinit var tvMethod4: TextView
     private lateinit var tvMethod5: TextView
-    private lateinit var tvSummary: TextView
     private lateinit var btnRefresh: Button
     private lateinit var btnCopy: Button
 
@@ -43,7 +42,6 @@ class MainActivity : AppCompatActivity() {
         tvMethod3 = findViewById(R.id.tvMethod3)
         tvMethod4 = findViewById(R.id.tvMethod4)
         tvMethod5 = findViewById(R.id.tvMethod5)
-        tvSummary = findViewById(R.id.tvSummary)
         btnRefresh = findViewById(R.id.btnRefresh)
         btnCopy = findViewById(R.id.btnCopy)
 
@@ -60,7 +58,6 @@ class MainActivity : AppCompatActivity() {
         refreshMethod3()
         refreshMethod4()
         refreshMethod5()
-        refreshSummary()
     }
 
     // 方法1: NetworkInterface
@@ -156,24 +153,20 @@ class MainActivity : AppCompatActivity() {
             sb.append("传统API: $wifiMac\n")
             if (wifiMac == "02:00:00:00:00:00") sb.append("(假MAC)\n")
 
-            // Android 13+ 新API: WifiManager.getActiveWifiInfo()
+            // Android 13+ 新API
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                sb.append("\nAndroid 13+ 尝试:\n")
+                sb.append("\nAndroid 13+:\n")
 
-                // 尝试通过反射获取更多信息
                 try {
                     val wifiInfo = wifiManager.connectionInfo
                     sb.append("SSID: ${wifiInfo?.ssid ?: "null"}\n")
 
-                    // Android 13: 尝试获取网络状态
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
                         val network = connectivityManager.activeNetwork
                         val capabilities = connectivityManager.getNetworkCapabilities(network)
                         if (capabilities != null) {
-                            sb.append("网络状态: 已连接\n")
-
-                            // 尝试获取LinkAddress
+                            sb.append("网络: 已连接\n")
                             val lp = connectivityManager.getLinkProperties(network)
                             lp?.linkAddresses?.forEach { la ->
                                 sb.append("IP: ${la.address.hostAddress}\n")
@@ -185,22 +178,18 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // Android 13: 通过ConnectivityManager获取WiFi信息
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                sb.append("\nConnectivityManager:\n")
+                sb.append("\n系统属性:\n")
                 try {
                     val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-                    val networks = cm.allNetworks
-                    for (net in networks) {
+                    for (net in cm.allNetworks) {
                         val nc = cm.getNetworkCapabilities(net)
                         if (nc?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
                             val lp = cm.getLinkProperties(net)
                             sb.append("接口: ${lp?.interfaceName}\n")
-
-                            // 尝试通过系统属性获取
                             val wifiMacProp = getSystemProperty("wifi.mac")
                             if (!wifiMacProp.isNullOrEmpty()) {
-                                sb.append("Prop wifi.mac: $wifiMacProp\n")
+                                sb.append("wifi.mac: $wifiMacProp\n")
                             }
                         }
                     }
@@ -246,18 +235,6 @@ class MainActivity : AppCompatActivity() {
         tvMethod5.text = sb.toString()
     }
 
-    private fun refreshSummary() {
-        val sb = StringBuilder()
-        sb.append("Android ≤5:  ✅ 可获取真实MAC\n")
-        sb.append("Android 6-9: ⚠️ 部分可用\n")
-        sb.append("Android 10+: ❌ 普通应用无法获取\n\n")
-        sb.append("解决方案:\n")
-        sb.append("• 系统签名应用\n")
-        sb.append("• Root权限\n")
-        sb.append("• 厂商私有API")
-        tvSummary.text = sb.toString()
-    }
-
     private fun getMacFromSysfs(interfaceName: String?): String {
         if (interfaceName.isNullOrBlank()) return "未知接口"
         return try {
@@ -290,8 +267,7 @@ class MainActivity : AppCompatActivity() {
         sb.append("【方法2 /sys/class/net】\n${tvMethod2.text}\n")
         sb.append("【方法3 ConnectivityManager】\n${tvMethod3.text}\n")
         sb.append("【方法4 WifiManager】\n${tvMethod4.text}\n")
-        sb.append("【方法5 Shell命令】\n${tvMethod5.text}\n")
-        sb.append("【总结】\n${tvSummary.text}")
+        sb.append("【方法5 Shell命令】\n${tvMethod5.text}")
 
         val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.text = sb.toString()
