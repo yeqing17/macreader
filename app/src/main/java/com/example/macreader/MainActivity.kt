@@ -2,8 +2,6 @@ package com.example.macreader
 
 import android.annotation.SuppressLint
 import android.net.ConnectivityManager
-import android.net.LinkProperties
-import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import android.os.Build
@@ -48,221 +46,263 @@ class MainActivity : AppCompatActivity() {
             copyToClipboard()
         }
 
-        // 首次加载
         refreshMacInfo()
     }
 
-    @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission", "NewApi")
     private fun refreshMacInfo() {
         val info = StringBuilder()
-        info.append("=== 网卡MAC地址信息 ===\n")
-        info.append("设备: ${Build.MODEL}\n")
-        info.append("Android版本: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\n")
-        info.append("厂商: ${Build.MANUFACTURER}\n")
+
+        // 标题
+        info.append("═".repeat(40)).append("\n")
+        info.append("       MAC地址读取器 v1.1\n")
+        info.append("═".repeat(40)).append("\n\n")
+
+        info.append("【设备信息】\n")
+        info.append("  型号: ${Build.MODEL}\n")
+        info.append("  厂商: ${Build.MANUFACTURER}\n")
+        info.append("  Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\n")
         info.append("\n")
 
-        // 方法1: 通过NetworkInterface获取
+        // ═══════════════════════════════════════
+        // 方法1: NetworkInterface
+        // ═══════════════════════════════════════
+        info.append("═".repeat(40)).append("\n")
+        info.append("【方法1】NetworkInterface (Java API)\n")
         info.append("─".repeat(40)).append("\n")
-        info.append("【方法1: NetworkInterface】\n")
+        info.append("代码:\n")
+        info.append("  NetworkInterface.getNetworkInterfaces()\n")
+        info.append("  .getHardwareAddress()\n")
+        info.append("─".repeat(40)).append("\n")
+        info.append("结果:\n")
         try {
             val networkInterfaces = NetworkInterface.getNetworkInterfaces()
             if (networkInterfaces != null) {
                 val interfaces = Collections.list(networkInterfaces)
-                info.append("发现 ${interfaces.size} 个网络接口:\n\n")
+                info.append("  ✅ 获取到 ${interfaces.size} 个接口\n\n")
 
-                for (netInterface in interfaces) {
-                    info.append("【${netInterface.name}】\n")
-                    info.append("  显示名: ${netInterface.displayName}\n")
-
+                for (netInterface in interfaces.sortedBy { it.name }) {
                     val macBytes = netInterface.hardwareAddress
-                    if (macBytes != null && macBytes.isNotEmpty()) {
-                        val macAddress = macBytes.joinToString(":") {
-                            String.format("%02X", it)
-                        }
-                        info.append("  MAC: $macAddress\n")
+                    val macStr = if (macBytes != null && macBytes.isNotEmpty()) {
+                        macBytes.joinToString(":") { String.format("%02X", it) }
                     } else {
-                        info.append("  MAC: 无法获取\n")
+                        "null (无权限获取MAC)"
                     }
 
-                    info.append("  MTU: ${netInterface.mtu}\n")
-                    info.append("  状态: ${if (netInterface.isUp) "启用" else "禁用"}\n")
-                    info.append("  类型: ${getInterfaceType(netInterface.name)}\n")
-                    info.append("\n")
+                    info.append("  [${netInterface.name}]\n")
+                    info.append("    MAC: $macStr\n")
                 }
             } else {
-                info.append("NetworkInterface.getNetworkInterfaces() 返回 null\n")
-                info.append("(Android 11+ 普通应用无法访问)\n")
+                info.append("  ❌ 返回 null\n")
+                info.append("  原因: Android 10+ 普通应用无权访问\n")
             }
         } catch (e: Exception) {
-            info.append("获取失败: ${e.message}\n")
+            info.append("  ❌ 异常: ${e.message}\n")
         }
+        info.append("\n")
 
-        // 方法2: 读取 /sys/class/net 文件
+        // ═══════════════════════════════════════
+        // 方法2: /sys/class/net 文件系统
+        // ═══════════════════════════════════════
+        info.append("═".repeat(40)).append("\n")
+        info.append("【方法2】/sys/class/net 文件系统\n")
         info.append("─".repeat(40)).append("\n")
-        info.append("【方法2: /sys/class/net】\n")
+        info.append("代码:\n")
+        info.append("  File(\"/sys/class/net/wlan0/address\")\n")
+        info.append("  .readText()\n")
+        info.append("─".repeat(40)).append("\n")
+        info.append("结果:\n")
         try {
             val netDir = File("/sys/class/net")
             if (netDir.exists() && netDir.isDirectory) {
                 val interfaces = netDir.listFiles()?.toList()?.sortedBy { it.name } ?: emptyList()
-                info.append("发现 ${interfaces.size} 个接口:\n\n")
+                info.append("  ✅ 目录存在，${interfaces.size} 个接口\n\n")
 
                 for (iface in interfaces) {
-                    info.append("【${iface.name}】\n")
                     val macFile = File(iface, "address")
+                    info.append("  [${iface.name}]\n")
                     if (macFile.exists()) {
-                        val mac = macFile.readText().trim()
-                        if (mac.isNotEmpty() && mac != "00:00:00:00:00:00") {
-                            info.append("  MAC: $mac\n")
-                        } else {
-                            info.append("  MAC: 空或全零\n")
+                        try {
+                            val mac = macFile.readText().trim()
+                            info.append("    MAC: $mac\n")
+                        } catch (e: SecurityException) {
+                            info.append("    MAC: ❌ 权限被拒绝\n")
+                        } catch (e: Exception) {
+                            info.append("    MAC: ❌ ${e.message}\n")
                         }
                     } else {
-                        info.append("  MAC: 文件不存在\n")
+                        info.append("    MAC: 文件不存在\n")
                     }
-                    info.append("\n")
                 }
             } else {
-                info.append("/sys/class/net 目录不存在或无法访问\n")
+                info.append("  ❌ 目录不存在或无权访问\n")
             }
         } catch (e: Exception) {
-            info.append("读取失败: ${e.message}\n")
+            info.append("  ❌ 异常: ${e.message}\n")
         }
+        info.append("\n")
 
-        // 方法3: 通过ConnectivityManager获取 (Android M+)
+        // ═══════════════════════════════════════
+        // 方法3: ConnectivityManager
+        // ═══════════════════════════════════════
+        info.append("═".repeat(40)).append("\n")
+        info.append("【方法3】ConnectivityManager (Android M+)\n")
+        info.append("─".repeat(40)).append("\n")
+        info.append("代码:\n")
+        info.append("  ConnectivityManager.getAllNetworks()\n")
+        info.append("  .getLinkProperties()\n")
+        info.append("─".repeat(40)).append("\n")
+        info.append("结果:\n")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            info.append("─".repeat(40)).append("\n")
-            info.append("【方法3: ConnectivityManager】\n")
             try {
                 val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
                 val networks = cm.allNetworks
 
-                for (network in networks) {
-                    val nc = cm.getNetworkCapabilities(network)
-                    val lp = cm.getLinkProperties(network)
+                if (networks.isNotEmpty()) {
+                    info.append("  ✅ 获取到 ${networks.size} 个网络\n\n")
 
-                    if (lp != null) {
-                        info.append("【${lp.interfaceName ?: "未知接口"}】\n")
+                    for (network in networks) {
+                        val nc = cm.getNetworkCapabilities(network)
+                        val lp = cm.getLinkProperties(network)
 
-                        if (nc != null) {
-                            val type = when {
-                                nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "WiFi"
-                                nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "有线网"
-                                nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "移动数据"
-                                nc.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> "VPN"
-                                else -> "其他"
+                        if (lp != null) {
+                            info.append("  [${lp.interfaceName ?: "未知"}]\n")
+
+                            if (nc != null) {
+                                val type = when {
+                                    nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "WiFi"
+                                    nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "以太网"
+                                    nc.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "移动数据"
+                                    nc.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> "VPN"
+                                    else -> "其他"
+                                }
+                                info.append("    类型: $type\n")
                             }
-                            info.append("  类型: $type\n")
-                            info.append("  状态: ${if (nc.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) "已连接" else "未连接"}\n")
-                        }
 
-                        // 获取MAC - LinkProperties不直接提供MAC
-                        val macAddr = getMacFromInterface(lp.interfaceName)
-                        if (macAddr != null) {
-                            info.append("  MAC: $macAddr\n")
-                        } else {
-                            info.append("  MAC: 无法获取\n")
+                            // 尝试从sysfs读取MAC
+                            val mac = getMacFromSysfs(lp.interfaceName)
+                            info.append("    MAC: $mac\n")
                         }
-                        info.append("\n")
                     }
+                } else {
+                    info.append("  无活动网络\n")
                 }
             } catch (e: Exception) {
-                info.append("获取失败: ${e.message}\n")
+                info.append("  ❌ 异常: ${e.message}\n")
             }
+        } else {
+            info.append("  ⚠️ 需要 Android 6.0+\n")
         }
+        info.append("\n")
 
-        // 方法4: WiFi MAC (传统方式)
+        // ═══════════════════════════════════════
+        // 方法4: WifiManager
+        // ═══════════════════════════════════════
+        info.append("═".repeat(40)).append("\n")
+        info.append("【方法4】WifiManager (传统方式)\n")
         info.append("─".repeat(40)).append("\n")
-        info.append("【方法4: WifiManager】\n")
+        info.append("代码:\n")
+        info.append("  WifiManager.getConnectionInfo()\n")
+        info.append("  .getMacAddress()\n")
+        info.append("─".repeat(40)).append("\n")
+        info.append("结果:\n")
         try {
             val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
             val wifiInfo = wifiManager.connectionInfo
             val wifiMac = wifiInfo.macAddress
+
             info.append("  MAC: $wifiMac\n")
-            if (wifiMac == "02:00:00:00:00:00") {
-                info.append("  (Android 6.0+ 返回假MAC)\n")
+            when {
+                wifiMac == "02:00:00:00:00:00" -> info.append("  状态: ❌ Android 6.0+ 返回假MAC\n")
+                wifiMac.isNullOrBlank() -> info.append("  状态: ❌ 返回空\n")
+                else -> info.append("  状态: ✅ 可能是真实MAC\n")
             }
         } catch (e: Exception) {
-            info.append("  获取失败: ${e.message}\n")
+            info.append("  ❌ 异常: ${e.message}\n")
         }
-
-        // 执行shell命令获取
-        info.append("─".repeat(40)).append("\n")
-        info.append("【方法5: Shell命令】\n")
-        try {
-            val commands = listOf(
-                "cat /sys/class/net/wlan0/address",
-                "cat /sys/class/net/eth0/address",
-                "ip link show",
-                "ifconfig"
-            )
-
-            for (cmd in commands) {
-                info.append("\n\$ $cmd\n")
-                try {
-                    val process = Runtime.getRuntime().exec(cmd)
-                    val reader = BufferedReader(InputStreamReader(process.inputStream))
-                    val output = reader.readText().trim()
-                    reader.close()
-                    process.waitFor()
-
-                    if (output.isNotEmpty()) {
-                        // 只显示前几行
-                        val lines = output.lines().take(5)
-                        for (line in lines) {
-                            info.append("  $line\n")
-                        }
-                        if (output.lines().size > 5) {
-                            info.append("  ...\n")
-                        }
-                    } else {
-                        info.append("  (无输出)\n")
-                    }
-                } catch (e: Exception) {
-                    info.append("  错误: ${e.message}\n")
-                }
-            }
-        } catch (e: Exception) {
-            info.append("执行失败: ${e.message}\n")
-        }
-
-        // 说明
         info.append("\n")
+
+        // ═══════════════════════════════════════
+        // 方法5: Shell 命令
+        // ═══════════════════════════════════════
+        info.append("═".repeat(40)).append("\n")
+        info.append("【方法5】Shell 命令执行\n")
         info.append("─".repeat(40)).append("\n")
-        info.append("【说明】\n")
-        info.append("• Android 10+ 普通应用无法获取真实MAC\n")
-        info.append("• 需要系统签名或root权限才能获取\n")
-        info.append("• /sys/class/net 在部分设备可读取\n")
-        info.append("• 此APP仅用于测试权限限制\n")
+        info.append("命令:\n")
+        info.append("  cat /sys/class/net/wlan0/address\n")
+        info.append("  ip link show\n")
+        info.append("  ifconfig\n")
+        info.append("─".repeat(40)).append("\n")
+        info.append("结果:\n")
+
+        val commands = listOf(
+            "cat /sys/class/net/wlan0/address" to "wlan0 MAC",
+            "cat /sys/class/net/eth0/address" to "eth0 MAC",
+            "ip link show wlan0" to "ip link wlan0",
+            "ifconfig wlan0" to "ifconfig wlan0"
+        )
+
+        for ((cmd, label) in commands) {
+            info.append("\n  [$label]\n")
+            info.append("  \$ $cmd\n")
+            try {
+                val process = Runtime.getRuntime().exec(cmd)
+                val reader = BufferedReader(InputStreamReader(process.inputStream))
+                val output = reader.readText().trim()
+                val errorReader = BufferedReader(InputStreamReader(process.errorStream))
+                val error = errorReader.readText().trim()
+                reader.close()
+                errorReader.close()
+                process.waitFor()
+
+                when {
+                    output.isNotEmpty() -> {
+                        val firstLine = output.lines().first()
+                        info.append("  → $firstLine\n")
+                    }
+                    error.isNotEmpty() -> info.append("  → 错误: ${error.lines().first()}\n")
+                    else -> info.append("  → 无输出\n")
+                }
+            } catch (e: Exception) {
+                info.append("  → 异常: ${e.message}\n")
+            }
+        }
+        info.append("\n")
+
+        // ═══════════════════════════════════════
+        // 总结
+        // ═══════════════════════════════════════
+        info.append("═".repeat(40)).append("\n")
+        info.append("【总结】\n")
+        info.append("─".repeat(40)).append("\n")
+        info.append("Android 版本限制:\n")
+        info.append("  • Android 5.x 及以下: ✅ 可获取真实MAC\n")
+        info.append("  • Android 6.0-9.0:   ⚠️ 部分方法可用\n")
+        info.append("  • Android 10+:       ❌ 普通应用无法获取\n")
+        info.append("\n")
+        info.append("如需获取真实MAC，需要:\n")
+        info.append("  1. 系统签名应用\n")
+        info.append("  2. 设备Root权限\n")
+        info.append("  3. 厂商私有API\n")
 
         tvMacInfo.text = info.toString()
         scrollView.fullScroll(View.FOCUS_UP)
     }
 
-    private fun getMacFromInterface(interfaceName: String?): String? {
-        if (interfaceName.isNullOrBlank()) return null
+    private fun getMacFromSysfs(interfaceName: String?): String {
+        if (interfaceName.isNullOrBlank()) return "接口名未知"
         return try {
             val macFile = File("/sys/class/net/$interfaceName/address")
             if (macFile.exists()) {
-                macFile.readText().trim()
+                val mac = macFile.readText().trim()
+                if (mac.isNotEmpty()) mac else "读取失败"
             } else {
-                null
+                "文件不存在"
             }
+        } catch (e: SecurityException) {
+            "权限被拒绝"
         } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun getInterfaceType(name: String): String {
-        return when {
-            name.startsWith("wlan") -> "WiFi无线网卡"
-            name.startsWith("eth") -> "以太网网卡"
-            name.startsWith("rmnet") -> "移动数据"
-            name.startsWith("lo") -> "本地回环"
-            name.startsWith("bt") -> "蓝牙"
-            name.startsWith("tun") -> "VPN隧道"
-            name.startsWith("dummy") -> "虚拟接口"
-            name.startsWith("sit") -> "IPv6隧道"
-            else -> "其他接口"
+            "错误: ${e.message}"
         }
     }
 

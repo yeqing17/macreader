@@ -11,10 +11,20 @@ android {
         applicationId = "com.example.macreader"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // 设置输出APK名称
+        setProperty("archivesBaseName", "MacReader-v${versionName}")
+    }
+
+    applicationVariants.all {
+        outputs.all {
+            val fileName = "MacReader-${name}-v${versionName}.apk"
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
+        }
     }
 
     buildTypes {
