@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
-import android.net.wifi.WifiInfo
 import android.os.Build
 import android.os.Bundle
 import android.text.ClipboardManager
@@ -14,7 +13,6 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -23,6 +21,7 @@ import java.util.Collections
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var tvVersion: TextView
     private lateinit var tvDeviceInfo: TextView
     private lateinit var tvMethod1: TextView
     private lateinit var tvMethod2: TextView
@@ -36,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        tvVersion = findViewById(R.id.tvVersion)
         tvDeviceInfo = findViewById(R.id.tvDeviceInfo)
         tvMethod1 = findViewById(R.id.tvMethod1)
         tvMethod2 = findViewById(R.id.tvMethod2)
@@ -52,6 +52,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun refreshAll() {
+        val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+        tvVersion.text = "v$versionName"
         tvDeviceInfo.text = "${Build.MANUFACTURER} ${Build.MODEL} | Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
         refreshMethod1()
         refreshMethod2()
@@ -67,9 +69,30 @@ class MainActivity : AppCompatActivity() {
         try {
             val interfaces = NetworkInterface.getNetworkInterfaces()
             if (interfaces == null) {
-                sb.append("❌ 返回null (Android 10+限制)\n")
+                sb.append("❌ getNetworkInterfaces() = null\n")
+                sb.append("原因: 系统限制或无权限\n")
+                // 尝试直接获取特定接口
+                sb.append("\n尝试直接获取:\n")
+                val names = listOf("wlan0", "eth0", "rmnet0", "p2p0")
+                for (name in names) {
+                    try {
+                        val iface = NetworkInterface.getByName(name)
+                        if (iface != null) {
+                            val mac = iface.hardwareAddress
+                            val macStr = if (mac != null && mac.isNotEmpty()) {
+                                mac.joinToString(":") { String.format("%02X", it) }
+                            } else {
+                                "null"
+                            }
+                            sb.append("$name: $macStr\n")
+                        }
+                    } catch (e: Exception) {
+                        sb.append("$name: ${e.message}\n")
+                    }
+                }
             } else {
                 val list = Collections.list(interfaces)
+                sb.append("发现${list.size}个接口:\n")
                 for (iface in list.sortedBy { it.name }) {
                     val mac = iface.hardwareAddress
                     val macStr = if (mac != null && mac.isNotEmpty()) {
@@ -81,7 +104,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            sb.append("❌ ${e.message}\n")
+            sb.append("❌ 异常: ${e.javaClass.simpleName}\n")
+            sb.append("${e.message}\n")
         }
         tvMethod1.text = sb.toString()
     }
@@ -92,9 +116,10 @@ class MainActivity : AppCompatActivity() {
         try {
             val netDir = File("/sys/class/net")
             if (!netDir.exists()) {
-                sb.append("❌ 目录不存在\n")
+                sb.append("❌ /sys/class/net 不存在\n")
             } else {
                 val interfaces = netDir.listFiles()?.sortedBy { it.name } ?: emptyList()
+                sb.append("发现${interfaces.size}个接口:\n")
                 for (iface in interfaces) {
                     val macFile = File(iface, "address")
                     try {
@@ -103,7 +128,7 @@ class MainActivity : AppCompatActivity() {
                     } catch (e: SecurityException) {
                         sb.append("${iface.name}: 权限拒绝\n")
                     } catch (e: Exception) {
-                        sb.append("${iface.name}: ${e.message}\n")
+                        sb.append("${iface.name}: 读取失败\n")
                     }
                 }
             }
@@ -122,17 +147,23 @@ class MainActivity : AppCompatActivity() {
         } else {
             try {
                 val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-                for (network in cm.allNetworks) {
-                    val nc = cm.getNetworkCapabilities(network)
-                    val lp = cm.getLinkProperties(network) ?: continue
-                    val type = when {
-                        nc?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> "WiFi"
-                        nc?.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) == true -> "ETH"
-                        nc?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true -> "Cell"
-                        else -> "Other"
+                val networks = cm.allNetworks
+                if (networks.isEmpty()) {
+                    sb.append("无活动网络\n")
+                } else {
+                    for (network in networks) {
+                        val nc = cm.getNetworkCapabilities(network)
+                        val lp = cm.getLinkProperties(network) ?: continue
+                        val type = when {
+                            nc?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true -> "WiFi"
+                            nc?.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) == true -> "ETH"
+                            nc?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true -> "Cell"
+                            else -> "Other"
+                        }
+                        val mac = getMacFromSysfs(lp.interfaceName)
+                        sb.append("[${lp.interfaceName}] $type\n")
+                        sb.append("  MAC: $mac\n")
                     }
-                    val mac = getMacFromSysfs(lp.interfaceName)
-                    sb.append("[${lp.interfaceName}] $type: $mac\n")
                 }
             } catch (e: Exception) {
                 sb.append("❌ ${e.message}\n")
@@ -148,49 +179,24 @@ class MainActivity : AppCompatActivity() {
         try {
             val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
 
-            // 传统方式
             val wifiMac = wifiManager.connectionInfo.macAddress
-            sb.append("传统API: $wifiMac\n")
-            if (wifiMac == "02:00:00:00:00:00") sb.append("(假MAC)\n")
-
-            // Android 13+ 新API
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                sb.append("\nAndroid 13+:\n")
-
-                try {
-                    val wifiInfo = wifiManager.connectionInfo
-                    sb.append("SSID: ${wifiInfo?.ssid ?: "null"}\n")
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-                        val network = connectivityManager.activeNetwork
-                        val capabilities = connectivityManager.getNetworkCapabilities(network)
-                        if (capabilities != null) {
-                            sb.append("网络: 已连接\n")
-                            val lp = connectivityManager.getLinkProperties(network)
-                            lp?.linkAddresses?.forEach { la ->
-                                sb.append("IP: ${la.address.hostAddress}\n")
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    sb.append("异常: ${e.message}\n")
-                }
+            sb.append("WiFi MAC: $wifiMac\n")
+            if (wifiMac == "02:00:00:00:00:00") {
+                sb.append("(Android 6+返回假MAC)\n")
             }
 
+            // Android 13+ 新API
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                sb.append("\n系统属性:\n")
+                sb.append("\nAndroid 13+:\n")
                 try {
                     val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-                    for (net in cm.allNetworks) {
-                        val nc = cm.getNetworkCapabilities(net)
-                        if (nc?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
-                            val lp = cm.getLinkProperties(net)
-                            sb.append("接口: ${lp?.interfaceName}\n")
-                            val wifiMacProp = getSystemProperty("wifi.mac")
-                            if (!wifiMacProp.isNullOrEmpty()) {
-                                sb.append("wifi.mac: $wifiMacProp\n")
-                            }
+                    val network = connectivityManager.activeNetwork
+                    val nc = connectivityManager.getNetworkCapabilities(network)
+                    if (nc != null) {
+                        sb.append("网络已连接\n")
+                        val lp = connectivityManager.getLinkProperties(network)
+                        lp?.linkAddresses?.forEach { la ->
+                            sb.append("IP: ${la.address.hostAddress}\n")
                         }
                     }
                 } catch (e: Exception) {
@@ -210,8 +216,8 @@ class MainActivity : AppCompatActivity() {
         val commands = listOf(
             "cat /sys/class/net/wlan0/address" to "wlan0",
             "cat /sys/class/net/eth0/address" to "eth0",
-            "ip link show wlan0" to "ip wlan0",
-            "ifconfig wlan0 2>/dev/null | head -2" to "ifconfig"
+            "ip link show wlan0 2>/dev/null | grep ether" to "ip link",
+            "ifconfig wlan0 2>/dev/null | grep -i hw" to "ifconfig"
         )
 
         for ((cmd, label) in commands) {
@@ -223,7 +229,7 @@ class MainActivity : AppCompatActivity() {
                 process.waitFor()
 
                 val result = if (output.isNotEmpty()) {
-                    output.lines().first().take(30)
+                    output.lines().first().take(35)
                 } else {
                     "(空)"
                 }
@@ -236,10 +242,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getMacFromSysfs(interfaceName: String?): String {
-        if (interfaceName.isNullOrBlank()) return "未知接口"
+        if (interfaceName.isNullOrBlank()) return "未知"
         return try {
             val macFile = File("/sys/class/net/$interfaceName/address")
-            if (macFile.exists()) macFile.readText().trim() else "文件不存在"
+            if (macFile.exists()) macFile.readText().trim() else "不存在"
         } catch (e: SecurityException) {
             "权限拒绝"
         } catch (e: Exception) {
@@ -247,21 +253,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getSystemProperty(key: String): String? {
-        return try {
-            val process = Runtime.getRuntime().exec("getprop $key")
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            val value = reader.readLine()
-            reader.close()
-            value
-        } catch (e: Exception) {
-            null
-        }
-    }
-
     private fun copyToClipboard() {
         val sb = StringBuilder()
-        sb.append("=== MAC地址读取器 ===\n")
+        sb.append("=== MAC地址信息 ===\n")
         sb.append("设备: ${tvDeviceInfo.text}\n\n")
         sb.append("【方法1 NetworkInterface】\n${tvMethod1.text}\n")
         sb.append("【方法2 /sys/class/net】\n${tvMethod2.text}\n")
