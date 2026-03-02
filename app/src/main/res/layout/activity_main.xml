@@ -3,58 +3,331 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#F5F5F5">
+    android:background="#1a1a2e"
+    android:padding="24dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="MAC地址读取器"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:gravity="center"
-        android:paddingBottom="12dp"/>
-
+    <!-- 标题栏 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center"
-        android:paddingBottom="12dp">
+        android:gravity="center_vertical"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="MAC地址读取器"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#00d9ff"/>
+
+        <TextView
+            android:id="@+id/tvVersion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="v1.2"
+            android:textSize="16sp"
+            android:textColor="#666666"
+            android:layout_marginEnd="24dp"/>
 
         <Button
             android:id="@+id/btnRefresh"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="刷新"
-            android:layout_marginEnd="16dp"/>
+            android:textSize="16sp"
+            android:minWidth="100dp"
+            android:layout_marginEnd="12dp"/>
 
         <Button
             android:id="@+id/btnCopy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="复制全部"/>
-
+            android:text="复制"
+            android:textSize="16sp"
+            android:minWidth="100dp"/>
     </LinearLayout>
 
-    <ScrollView
-        android:id="@+id/scrollView"
+    <!-- 设备信息卡片 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#16213e"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:id="@+id/tvDeviceInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:textColor="#e0e0e0"
+            android:fontFamily="monospace"/>
+    </LinearLayout>
+
+    <!-- 主内容区域 - 横向两列 -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="#FFFFFF"
-        android:padding="12dp"
-        android:elevation="2dp">
+        android:orientation="horizontal"
+        android:baselineAligned="false">
 
-        <TextView
-            android:id="@+id/tvMacInfo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="#333333"
-            android:fontFamily="monospace"/>
+        <!-- 左列 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="8dp">
 
-    </ScrollView>
+            <!-- 方法1 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#16213e"
+                android:padding="12dp"
+                android:layout_marginBottom="8dp">
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="方法1: NetworkInterface"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#00d9ff"
+                    android:paddingBottom="8dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="NetworkInterface.getNetworkInterfaces()"
+                    android:textSize="12sp"
+                    android:textColor="#888888"
+                    android:fontFamily="monospace"
+                    android:paddingBottom="4dp"/>
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/tvMethod1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="#e0e0e0"
+                        android:fontFamily="monospace"/>
+                </ScrollView>
+            </LinearLayout>
+
+            <!-- 方法2 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#16213e"
+                android:padding="12dp"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="方法2: /sys/class/net"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#00d9ff"
+                    android:paddingBottom="8dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="File(\"/sys/class/net/*/address\").readText()"
+                    android:textSize="12sp"
+                    android:textColor="#888888"
+                    android:fontFamily="monospace"
+                    android:paddingBottom="4dp"/>
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/tvMethod2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="#e0e0e0"
+                        android:fontFamily="monospace"/>
+                </ScrollView>
+            </LinearLayout>
+
+            <!-- 方法3 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#16213e"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="方法3: ConnectivityManager"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#00d9ff"
+                    android:paddingBottom="8dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ConnectivityManager.getAllNetworks()"
+                    android:textSize="12sp"
+                    android:textColor="#888888"
+                    android:fontFamily="monospace"
+                    android:paddingBottom="4dp"/>
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/tvMethod3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="#e0e0e0"
+                        android:fontFamily="monospace"/>
+                </ScrollView>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 右列 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="8dp">
+
+            <!-- 方法4 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#16213e"
+                android:padding="12dp"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="方法4: WifiManager"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#00d9ff"
+                    android:paddingBottom="8dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="WifiManager.getConnectionInfo().getMacAddress()"
+                    android:textSize="12sp"
+                    android:textColor="#888888"
+                    android:fontFamily="monospace"
+                    android:paddingBottom="4dp"/>
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/tvMethod4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="#e0e0e0"
+                        android:fontFamily="monospace"/>
+                </ScrollView>
+            </LinearLayout>
+
+            <!-- 方法5 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#16213e"
+                android:padding="12dp"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="方法5: Shell命令"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#00d9ff"
+                    android:paddingBottom="8dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ip link / ifconfig / cat /sys/class/net/*/address"
+                    android:textSize="12sp"
+                    android:textColor="#888888"
+                    android:fontFamily="monospace"
+                    android:paddingBottom="4dp"/>
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/tvMethod5"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textColor="#e0e0e0"
+                        android:fontFamily="monospace"/>
+                </ScrollView>
+            </LinearLayout>
+
+            <!-- 总结 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:background="#0f3460"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Android版本限制"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#ffc107"
+                    android:paddingBottom="8dp"/>
+
+                <TextView
+                    android:id="@+id/tvSummary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textColor="#e0e0e0"
+                    android:fontFamily="monospace"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>
