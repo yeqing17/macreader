@@ -190,11 +190,11 @@ class MainActivity : AppCompatActivity() {
                 sb.append("\nAndroid 13+:\n")
                 try {
                     val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-                    val network = connectivityManager.activeNetwork
-                    val nc = connectivityManager.getNetworkCapabilities(network)
+                    val network = cm.activeNetwork
+                    val nc = cm.getNetworkCapabilities(network)
                     if (nc != null) {
                         sb.append("网络已连接\n")
-                        val lp = connectivityManager.getLinkProperties(network)
+                        val lp = cm.getLinkProperties(network)
                         lp?.linkAddresses?.forEach { la ->
                             sb.append("IP: ${la.address.hostAddress}\n")
                         }
